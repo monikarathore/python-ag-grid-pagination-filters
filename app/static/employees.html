@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Employee List</title>
+
+  <!-- AG Grid -->
+  <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@31.2.1/dist/ag-grid-community.noStyle.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css" />
+
+  <style>
+    html, body, #myGrid {
+      height: 100%;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="myGrid" class="ag-theme-alpine"></div>
+
+<script>
+  const pageSize = 10;
+
+  const columnDefs = [
+    { headerName: "Employee ID", field: "employee_id", filter: "agTextColumnFilter", floatingFilter: true },
+    { headerName: "Name", field: "name", filter: "agTextColumnFilter", floatingFilter: true },
+    { headerName: "Salary", field: "salary", filter: "agTextColumnFilter", floatingFilter: true },
+    { headerName: "Language", field: "language", filter: "agTextColumnFilter", floatingFilter: true },
+    { headerName: "Email", field: "email", filter: "agTextColumnFilter", floatingFilter: true },
+    { headerName: "Mobile", field: "mobile", filter: "agTextColumnFilter", floatingFilter: true }
+  ];
+
+  const gridOptions = {
+    columnDefs,
+    defaultColDef: {
+      sortable: true,
+      filter: true,
+      resizable: true,
+      floatingFilter: true
+    },
+    rowModelType: "infinite",
+    pagination: true,
+    paginationPageSize: pageSize,
+    cacheBlockSize: pageSize,
+    datasource: {
+      getRows: function (params) {
+        console.log("FILTER MODEL:", params.filterModel); // 👈 add this
+
+        const page = params.startRow / pageSize + 1;
+
+        const sortModel = params.sortModel[0] || {};
+        const sortBy = sortModel.colId;
+        const sortOrder = sortModel.sort || "asc";
+
+        const filterModel = params.filterModel || {};
+        const filterModelString = JSON.stringify(filterModel);
+
+        const queryParams = new URLSearchParams();
+        queryParams.append('page', page);
+        queryParams.append('page_size', pageSize);
+        queryParams.append('sort_by', sortBy);
+        queryParams.append('sort_order', sortOrder);
+        queryParams.append('filterModel', filterModelString);
+
+        const url = `http://127.0.0.1:8000/employees-paginated?${queryParams.toString()}`;
+
+        fetch(url, {
+          headers: {
+            Authorization: "Bearer monika"
+          }
+        })
+          .then(response => response.json())
+          .then(data => {
+            params.successCallback(data.data, data.total);
+          })
+          .catch(error => {
+            console.error("Error loading data:", error);
+            params.failCallback();
+          });
+      }
+
+
+    }
+  };
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const eGridDiv = document.querySelector('#myGrid');
+    new agGrid.Grid(eGridDiv, gridOptions);
+  });
+</script>
+
+</body>
+</html>

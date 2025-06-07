@@ -99,9 +99,6 @@ coverage/
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
 
-# Static files
-static/
-
 # Misc
 *.bak
 *.swp
